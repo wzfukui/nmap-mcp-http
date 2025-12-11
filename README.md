@@ -159,6 +159,29 @@ python server.py --init
 }
 ```
 
+### 测试验证
+
+项目自带测试客户端程序，可快速验证 MCP Server 是否正常工作。
+
+```bash
+# 激活虚拟环境
+source venv/bin/activate
+
+# 运行测试（需要先启动服务）
+python test_client.py <your_token>
+
+# 示例
+python test_client.py your_secret_token_here
+```
+
+**测试内容包括：**
+1. URL Token 鉴权方式
+2. HTTP Header Bearer Token 鉴权方式
+3. 无 Token 请求（验证拒绝）
+4. 错误 Token 请求（验证拒绝）
+
+测试程序会自动调用快速扫描工具并查询任务状态，确保所有功能正常运行。
+
 ## 可用工具
 
 **Nmap MCP Server 提供的工具列表：**

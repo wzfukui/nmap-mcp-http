@@ -26,27 +26,16 @@ from auth import TokenAuthMiddleware
 mcp = FastMCP(
     name="Nmap MCP Server",
     instructions="""
-Nmap MCP Server 是一个基于 HTTP 的网络端口扫描服务。
+基于 HTTP 的 Nmap 网络端口扫描服务。
 
-## 可用工具
+工具列表：
+- quick_scan: 快速扫描常用端口
+- full_scan: 全端口扫描（1-65535）
+- custom_scan: 自定义 Nmap 命令
+- get_task_status: 查询任务状态
+- get_task_result: 获取任务结果
 
-1. **quick_scan** - 快速扫描目标主机的常用端口（约100个），适合快速了解主机开放情况
-2. **full_scan** - 全量扫描目标主机的所有端口（1-65535），适合深度安全评估
-3. **custom_scan** - 执行自定义 Nmap 命令，支持所有 Nmap 参数
-4. **get_task_status** - 查询扫描任务的当前状态
-5. **get_task_result** - 获取扫描任务的完整结果
-
-## 使用流程
-
-1. 调用扫描工具（quick_scan/full_scan/custom_scan）
-2. 如果扫描在超时时间内完成，直接返回结果
-3. 如果扫描超时，返回任务 ID，后续通过 get_task_status/get_task_result 查询
-
-## 注意事项
-
-- 快速扫描通常几秒内完成
-- 全量扫描可能需要数分钟
-- 服务器最多支持 10 个并发扫描任务
+扫描完成前超时会返回任务 ID 供后续查询。服务器最多支持 10 个并发任务。
 """,
 )
 
@@ -144,30 +133,16 @@ async def _continue_scan_in_background(
 @mcp.tool
 async def quick_scan(
     target: Annotated[str, Field(
-        description="目标 IP 地址或主机名，支持单个 IP（如 192.168.1.1）、域名（如 example.com）或 CIDR 格式（如 192.168.1.0/24）",
-        examples=["192.168.1.1", "example.com", "10.0.0.1"]
+        description="扫描目标，支持 IP、域名或 CIDR 格式"
     )],
     timeout: Annotated[Optional[int], Field(
         default=None,
-        description="同步等待超时时间（秒）。如果扫描在此时间内完成则直接返回结果，否则返回任务 ID 供后续查询。默认 30 秒",
+        description="同步等待超时（秒），默认 30 秒，范围 5-300。超时后返回任务 ID 供后续异步查询",
         ge=5,
-        le=300,
-        examples=[30, 60]
+        le=300
     )] = None,
 ) -> dict:
-    """快速扫描目标主机的常用端口。
-
-    使用 Nmap 的 -F（快速模式）扫描约 100 个最常用的端口，适合快速了解目标主机的端口开放情况。
-    扫描结果以结构化 JSON 格式返回，包含主机状态、开放端口列表及对应服务信息。
-
-    返回结果包含:
-    - status: 扫描状态（completed 或 pending）
-    - task_id: 任务 ID，用于后续查询
-    - result: 扫描结果（仅当 status 为 completed 时）
-      - target: 扫描目标
-      - scan_time: 扫描耗时
-      - hosts: 主机列表，每个主机包含地址、状态、开放端口等信息
-    """
+    """快速扫描常用端口（约 100 个），返回结构化的主机和端口信息。"""
     command = scanner.build_quick_scan_command(target)
 
     completed, result, task_id = await execute_scan_with_timeout(
@@ -194,30 +169,16 @@ async def quick_scan(
 @mcp.tool
 async def full_scan(
     target: Annotated[str, Field(
-        description="目标 IP 地址或主机名，支持单个 IP（如 192.168.1.1）、域名（如 example.com）或 CIDR 格式（如 192.168.1.0/24）",
-        examples=["192.168.1.1", "example.com", "10.0.0.1"]
+        description="扫描目标，支持 IP、域名或 CIDR 格式"
     )],
     timeout: Annotated[Optional[int], Field(
         default=None,
-        description="同步等待超时时间（秒）。全量扫描通常需要较长时间，建议设置较大的超时值或使用默认值后通过任务 ID 查询结果。默认 30 秒",
+        description="同步等待超时（秒），默认 30 秒，范围 5-600。全端口扫描耗时较长，建议设置更大的超时值",
         ge=5,
-        le=600,
-        examples=[60, 120, 300]
+        le=600
     )] = None,
 ) -> dict:
-    """全量扫描目标主机的所有端口（1-65535）。
-
-    扫描目标主机的全部 65535 个端口，并进行服务版本检测（-sV）。
-    适合进行深度安全评估，但扫描时间较长（通常需要数分钟）。
-
-    返回结果包含:
-    - status: 扫描状态（completed 或 pending）
-    - task_id: 任务 ID，用于后续查询
-    - result: 扫描结果（仅当 status 为 completed 时）
-      - target: 扫描目标
-      - scan_time: 扫描耗时
-      - hosts: 主机列表，包含详细的端口和服务版本信息
-    """
+    """全端口扫描（1-65535）并进行服务版本检测，返回详细的端口和服务信息。扫描通常需要数分钟。"""
     command = scanner.build_full_scan_command(target)
 
     completed, result, task_id = await execute_scan_with_timeout(
@@ -244,42 +205,16 @@ async def full_scan(
 @mcp.tool
 async def custom_scan(
     command: Annotated[str, Field(
-        description="Nmap 命令参数和目标。可以包含任意 Nmap 支持的参数，如端口范围、扫描类型、脚本等。不需要包含 'nmap' 命令本身",
-        examples=[
-            "-sS -p 80,443,8080 192.168.1.1",
-            "-sV -sC -p 22 example.com",
-            "-sn 192.168.1.0/24",
-            "-A -T4 10.0.0.1",
-            "--script vuln 192.168.1.1"
-        ]
+        description="Nmap 命令参数和目标，支持所有 Nmap 参数。无需包含 'nmap' 命令本身"
     )],
     timeout: Annotated[Optional[int], Field(
         default=None,
-        description="同步等待超时时间（秒）。根据扫描复杂度设置合适的超时值。默认 30 秒",
+        description="同步等待超时（秒），默认 30 秒，范围 5-600。根据扫描复杂度调整超时值",
         ge=5,
-        le=600,
-        examples=[30, 60, 120]
+        le=600
     )] = None,
 ) -> dict:
-    """执行自定义 Nmap 扫描命令。
-
-    支持所有 Nmap 命令行参数，可实现各种高级扫描需求，如：
-    - 指定端口范围: -p 1-1000
-    - SYN 扫描: -sS
-    - 服务版本检测: -sV
-    - 操作系统检测: -O
-    - 脚本扫描: --script <script-name>
-    - 主机发现: -sn
-    - 激进扫描: -A
-
-    返回结果包含:
-    - status: 扫描状态（completed 或 pending）
-    - task_id: 任务 ID，用于后续查询
-    - result: 扫描结果（仅当 status 为 completed 时）
-      - target: 扫描目标
-      - command: 实际执行的完整命令
-      - raw_output: Nmap 原始输出文本
-    """
+    """执行自定义 Nmap 命令，返回原始输出文本。支持端口范围、扫描类型、脚本等所有 Nmap 参数。"""
     cmd_parts = scanner.build_custom_scan_command(command)
 
     # 从命令中提取目标（通常是最后一个参数）
@@ -314,28 +249,10 @@ async def custom_scan(
 @mcp.tool
 async def get_task_status(
     task_id: Annotated[str, Field(
-        description="扫描任务的唯一标识符（UUID 格式），由扫描工具返回",
-        examples=["550e8400-e29b-41d4-a716-446655440000"]
+        description="任务 ID（UUID 格式），由扫描工具返回"
     )]
 ) -> dict:
-    """查询扫描任务的当前状态。
-
-    用于检查异步扫描任务的执行进度，返回任务的基本信息和当前状态。
-
-    返回结果包含:
-    - id: 任务 ID
-    - task_type: 任务类型（quick/full/custom）
-    - target: 扫描目标
-    - status: 当前状态
-      - pending: 等待执行
-      - running: 正在扫描
-      - completed: 扫描完成
-      - failed: 扫描失败
-    - created_at: 任务创建时间
-    - started_at: 开始执行时间
-    - completed_at: 完成时间
-    - error_message: 错误信息（仅当 status 为 failed 时）
-    """
+    """查询任务状态，返回任务基本信息、当前状态（pending/running/completed/failed）及时间戳。"""
     task = task_manager.get_task(task_id)
 
     if not task:
@@ -349,28 +266,10 @@ async def get_task_status(
 @mcp.tool
 async def get_task_result(
     task_id: Annotated[str, Field(
-        description="扫描任务的唯一标识符（UUID 格式），由扫描工具返回",
-        examples=["550e8400-e29b-41d4-a716-446655440000"]
+        description="任务 ID（UUID 格式），由扫描工具返回"
     )]
 ) -> dict:
-    """获取扫描任务的完整结果。
-
-    用于获取已完成扫描任务的详细结果，包括所有扫描数据。
-
-    返回结果包含:
-    - id: 任务 ID
-    - task_type: 任务类型（quick/full/custom）
-    - target: 扫描目标
-    - command: 执行的 Nmap 命令
-    - status: 当前状态
-    - result: 扫描结果（仅当 status 为 completed 时）
-      - 对于 quick_scan/full_scan: 结构化的主机和端口信息
-      - 对于 custom_scan: 原始输出文本
-    - created_at: 任务创建时间
-    - started_at: 开始执行时间
-    - completed_at: 完成时间
-    - error_message: 错误信息（仅当 status 为 failed 时）
-    """
+    """获取任务完整结果，包含扫描数据（结构化或原始输出）、命令、状态及时间戳。"""
     task = task_manager.get_task(task_id)
 
     if not task:
