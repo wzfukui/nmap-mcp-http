@@ -4,6 +4,7 @@ Nmap MCP Server - 基于 Streamable HTTP 的远程 Nmap 扫描服务
 import asyncio
 import json
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import Optional, Annotated
 
 from fastmcp import FastMCP
@@ -11,6 +12,10 @@ from pydantic import Field
 from starlette.middleware import Middleware
 
 from config import config
+
+# 读取版本号
+VERSION_FILE = Path(__file__).parent / "VERSION"
+__version__ = VERSION_FILE.read_text().strip() if VERSION_FILE.exists() else "unknown"
 from models import TaskType, TaskStatus, ScanResult
 from task_manager import task_manager
 from scanner import scanner
@@ -379,7 +384,8 @@ async def get_task_result(
 def print_startup_info():
     """打印启动信息和 MCP 配置"""
     print("\n" + "=" * 70)
-    print("Nmap MCP Server 启动成功")
+    print(f"Nmap MCP Server v{__version__}")
+    print("https://github.com/flagify-com/nmap-mcp-http")
     print("=" * 70)
     print(f"  Host:              {config.host}")
     print(f"  Port:              {config.port}")

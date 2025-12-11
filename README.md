@@ -1,5 +1,9 @@
 # Nmap MCP Server
 
+[![GitHub](https://img.shields.io/badge/GitHub-flagify--com%2Fnmap--mcp--http-blue?logo=github)](https://github.com/flagify-com/nmap-mcp-http)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
+
 基于 [FastMCP](https://github.com/jlowin/fastmcp) 框架开发的 Nmap 扫描服务，通过 Streamable HTTP 协议提供远程调用能力，支持 MCP (Model Context Protocol) 客户端集成。
 
 ## 功能特性
@@ -295,6 +299,8 @@ nmap-mcp-http/
 ├── config.json        # 配置文件（需自行创建）
 ├── config.example.json # 配置文件模板
 ├── requirements.txt   # Python 依赖
+├── VERSION            # 版本号
+├── LICENSE            # MIT 开源许可证
 └── README.md          # 项目说明
 ```
 
