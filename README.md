@@ -298,6 +298,12 @@ nmap-mcp-http/
 └── README.md          # 项目说明
 ```
 
+## 贡献
+
+欢迎提交 Issue 和 Pull Request！本项目完全开源，期待社区的参与和贡献。
+
 ## 许可证
 
-MIT License
+本项目采用 [MIT License](LICENSE) 开源许可证。
+
+Copyright (c) 2025 上海雾帜智能科技有限公司 (Shanghai Wuzhi Intelligent Technology Co., Ltd.)
