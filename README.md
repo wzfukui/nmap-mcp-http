@@ -6,6 +6,12 @@
 
 基于 [FastMCP](https://github.com/jlowin/fastmcp) 框架开发的 Nmap 扫描服务，通过 Streamable HTTP 协议提供远程调用能力，支持 MCP (Model Context Protocol) 客户端集成。
 
+## 截图预览
+
+**在 DeepSOC 中使用 Nmap MCP Server 进行端口扫描：**
+
+![DeepSOC with Nmap MCP](images/deepsoc-with-nmap-mcp.png)
+
 ## 功能特性
 
 - **快速扫描** - 扫描目标主机的常用端口（约 100 个）
@@ -155,6 +161,10 @@ python server.py --init
 
 ## 可用工具
 
+**Nmap MCP Server 提供的工具列表：**
+
+![Nmap MCP Available Tools](images/nmap-mcp-available-tools.png)
+
 ### quick_scan
 
 快速扫描目标主机的常用端口（约 100 个）。
@@ -301,7 +311,10 @@ nmap-mcp-http/
 ├── requirements.txt   # Python 依赖
 ├── VERSION            # 版本号
 ├── LICENSE            # MIT 开源许可证
-└── README.md          # 项目说明
+├── README.md          # 项目说明
+└── images/            # 截图资源
+    ├── deepsoc-with-nmap-mcp.png
+    └── nmap-mcp-available-tools.png
 ```
 
 ## 贡献
