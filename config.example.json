@@ -1,0 +1,10 @@
+{
+  "host": "0.0.0.0",
+  "port": 3004,
+  "path": "/mcp",
+  "token": "your_secret_token_here",
+  "sync_timeout": 30,
+  "max_concurrent_tasks": 10,
+  "db_path": "nmap_tasks.db",
+  "nmap_path": "nmap"
+}
