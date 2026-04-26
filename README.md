@@ -166,10 +166,12 @@ EOF
 touch nmap_tasks.db
 ```
 
-2) 拉取镜像：
+2) 拉取镜像（优先组织仓库）：
 
 ```bash
-docker pull ghcr.io/wzfukui/nmap-mcp-http:latest
+docker pull ghcr.io/flagify-com/nmap-mcp-http:latest
+# fallback:
+# docker pull ghcr.io/wzfukui/nmap-mcp-http:latest
 ```
 
 3) 启动容器：
@@ -181,7 +183,7 @@ docker run -d \
   -v "$(pwd)/config.json:/app/config.json:ro" \
   -v "$(pwd)/nmap_tasks.db:/app/nmap_tasks.db" \
   --restart always \
-  ghcr.io/wzfukui/nmap-mcp-http:latest
+  ghcr.io/flagify-com/nmap-mcp-http:latest
 ```
 
 4) 查看日志：
@@ -246,6 +248,12 @@ Workflow 会自动：
 示例镜像地址：
 
 ```text
+# preferred (org):
+ghcr.io/flagify-com/nmap-mcp-http:latest
+ghcr.io/flagify-com/nmap-mcp-http:main
+ghcr.io/flagify-com/nmap-mcp-http:sha-<commit>
+
+# fallback (personal):
 ghcr.io/wzfukui/nmap-mcp-http:latest
 ghcr.io/wzfukui/nmap-mcp-http:main
 ghcr.io/wzfukui/nmap-mcp-http:sha-<commit>
