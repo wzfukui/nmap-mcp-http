@@ -1,0 +1,15 @@
+services:
+  nmap-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nmap-mcp-http:latest
+    container_name: nmap-mcp-server
+    restart: always
+    ports:
+      - "3004:3004"
+    volumes:
+      # Persist task database
+      - ./nmap_tasks.db:/app/nmap_tasks.db
+      # Keep runtime config outside the image
+      - ./config.json:/app/config.json:ro

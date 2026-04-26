@@ -3,6 +3,7 @@
 [![GitHub](https://img.shields.io/badge/GitHub-flagify--com%2Fnmap--mcp--http-blue?logo=github)](https://github.com/flagify-com/nmap-mcp-http)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
+[![Docker Publish](../../actions/workflows/docker-publish.yml/badge.svg)](../../actions/workflows/docker-publish.yml)
 
 基于 [FastMCP](https://github.com/jlowin/fastmcp) 框架开发的 Nmap 扫描服务，通过 Streamable HTTP 协议提供远程调用能力，支持 MCP (Model Context Protocol) 客户端集成。
 
@@ -104,6 +105,60 @@ vim config.json  # 修改 token 等配置
 | `max_concurrent_tasks` | 最大并发任务数 | `10` |
 | `db_path` | SQLite 数据库路径 | `nmap_tasks.db` |
 | `nmap_path` | Nmap 可执行文件路径 | `nmap` |
+
+## Docker 部署
+
+项目已提供 `Dockerfile` 与 `docker-compose.yml`，可直接容器化运行。
+
+### 1) 准备运行文件
+
+```bash
+# 初始化配置文件（请修改 token）
+cp config.example.json config.json
+
+# 预创建 SQLite 文件，避免被 Docker 识别成目录
+touch nmap_tasks.db
+```
+
+### 2) 构建并启动
+
+```bash
+docker compose up -d --build
+```
+
+### 3) 查看日志
+
+```bash
+docker compose logs -f nmap-mcp-server
+```
+
+### 4) 停止服务
+
+```bash
+docker compose down
+```
+
+## GitHub Actions（Docker Publish）
+
+仓库已新增 `.github/workflows/docker-publish.yml`，触发条件如下：
+
+- push 到 `main`
+- push `v*` tag（例如 `v1.0.0`）
+- 手动触发 `workflow_dispatch`
+
+Workflow 会自动：
+
+1. 登录 GHCR（`ghcr.io`）
+2. 构建 Docker 镜像
+3. 推送镜像到 `ghcr.io/<owner>/<repo>`
+
+示例镜像地址：
+
+```text
+ghcr.io/wzfukui/nmap-mcp-http:latest
+ghcr.io/wzfukui/nmap-mcp-http:main
+ghcr.io/wzfukui/nmap-mcp-http:sha-<commit>
+```
 
 ## 使用方法
 
@@ -322,6 +377,10 @@ python test_client.py your_secret_token_here
 
 ```
 nmap-mcp-http/
+├── .github/workflows/
+│   └── docker-publish.yml # GitHub Actions Docker 构建与发布
+├── .dockerignore      # Docker 构建忽略规则
+├── Dockerfile         # 容器镜像构建文件
 ├── server.py          # MCP 服务器主程序
 ├── config.py          # 配置管理模块
 ├── models.py          # 数据模型定义
@@ -332,6 +391,7 @@ nmap-mcp-http/
 ├── config.json        # 配置文件（需自行创建）
 ├── config.example.json # 配置文件模板
 ├── requirements.txt   # Python 依赖
+├── docker-compose.yml # 本地容器编排
 ├── VERSION            # 版本号
 ├── LICENSE            # MIT 开源许可证
 ├── README.md          # 项目说明
