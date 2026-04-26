@@ -110,6 +110,8 @@ vim config.json  # 修改 token 等配置
 
 项目已提供 `Dockerfile` 与 `docker-compose.yml`，可直接容器化运行。
 
+### 方式 A：基于源码构建运行（docker compose）
+
 ### 1) 准备运行文件
 
 ```bash
@@ -136,6 +138,62 @@ docker compose logs -f nmap-mcp-server
 
 ```bash
 docker compose down
+```
+
+### 方式 B：直接拉取 GHCR 镜像运行（docker pull + docker run）
+
+适用于不想拉源码、只想直接运行容器的场景。
+
+1) 准备本地目录和配置文件：
+
+```bash
+mkdir -p nmap-mcp-data
+cd nmap-mcp-data
+
+cat > config.json <<'EOF'
+{
+  "host": "0.0.0.0",
+  "port": 3004,
+  "path": "/mcp",
+  "token": "replace_with_your_token",
+  "sync_timeout": 30,
+  "max_concurrent_tasks": 10,
+  "db_path": "nmap_tasks.db",
+  "nmap_path": "nmap"
+}
+EOF
+
+touch nmap_tasks.db
+```
+
+2) 拉取镜像：
+
+```bash
+docker pull ghcr.io/wzfukui/nmap-mcp-http:latest
+```
+
+3) 启动容器：
+
+```bash
+docker run -d \
+  --name nmap-mcp-server \
+  -p 3004:3004 \
+  -v "$(pwd)/config.json:/app/config.json:ro" \
+  -v "$(pwd)/nmap_tasks.db:/app/nmap_tasks.db" \
+  --restart always \
+  ghcr.io/wzfukui/nmap-mcp-http:latest
+```
+
+4) 查看日志：
+
+```bash
+docker logs -f nmap-mcp-server
+```
+
+5) 停止并删除容器：
+
+```bash
+docker rm -f nmap-mcp-server
 ```
 
 ## GitHub Actions（Docker Publish）
